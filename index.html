@@ -38,6 +38,11 @@
                     <td>Magic Bytes, In ASCII: <text class="glow">STGS</text></td>
                 </tr>
                 <tr>
+                    <td>0x0C</td>
+                    <td>ushort</td>
+                    <td>Endianness; 0xFFFE = Little endian, 0xFEFF = Big endian</td>
+                </tr>
+                <tr>
                     <td>0x04</td>
                     <td>uint</td>
                     <td>CRC-32 hash of the content after the header</td>
@@ -46,11 +51,6 @@
                     <td>0x08</td>
                     <td>uint</td>
                     <td>File size in bytes</td>
-                </tr>
-                <tr>
-                    <td>0x0C</td>
-                    <td>ushort</td>
-                    <td>Endianness; 0xFFFE = Little endian, 0xFEFF = Big endian</td>
                 </tr>
                 <tr>
                     <td>0x0E</td>
