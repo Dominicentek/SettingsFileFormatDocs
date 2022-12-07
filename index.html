@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+    <link rel="icon" type="image/gif" href="icon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="logo">
+        <img src="icon.png" alt="logo" style="grid-column: 1 / 2; grid-row: 1 / 2">
+        <div style="grid-column: 2 / 3; grid-row: 1 / 2" class="center">
+            The
+            <text class="big-glow">Settings</text>
+            format
+        </div>
+    </div>
+    <hr>
+    <div class="content">
+        <div style="grid-column: 1 / 2; grid-row: 1 / 2">
+            <h2 id="introduction">Introduction</h2>
+            <b>Settings</b> is a binary file format for storing settings for various programs.
+            It can also be used to store data but that's impractical.
+            Each setting is represented by an <b>element</b>. These elements can be all sorts of things, like checkboxes,
+            sliders and buttons. They are also put into categories. Each file has its own main root category. Elements
+            also have their IDs and display names.
+            <h2 id="file-header">File Header</h2>
+            The header consists of 4 magic bytes, endianness, its size in bytes, and the name of the file.<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>char[4]</td>
+                    <td>Magic Bytes, In ASCII: <text class="glow">STGS</text></td>
+                </tr>
+                <tr>
+                    <td>0x04</td>
+                    <td>uint</td>
+                    <td>CRC-32 hash of the content after the header</td>
+                </tr>
+                <tr>
+                    <td>0x08</td>
+                    <td>uint</td>
+                    <td>File size in bytes</td>
+                </tr>
+                <tr>
+                    <td>0x0C</td>
+                    <td>ushort</td>
+                    <td>Endianness; 0xFFFE = Little endian, 0xFEFF = Big endian</td>
+                </tr>
+                <tr>
+                    <td>0x0E</td>
+                    <td>bool</td>
+                    <td>0x00 = Read/Write, 0x01 = Read-only</td>
+                </tr>
+                <tr>
+                    <td>0x0F</td>
+                    <td>ushort</td>
+                    <td>Name length</td>
+                </tr>
+                <tr>
+                    <td>0x11</td>
+                    <td>char[*]</td>
+                    <td>UTF-8 string of any length defining the name of the file</td>
+                </tr>
+            </table>
+            <h2 id="elements">Elements</h2>
+            After the header come elements. There are several types of them:
+            <ul>
+                <li>Category</li>
+                <li>Checkbox</li>
+                <li>Slider</li>
+                <li>Dropdown Box</li>
+                <li>Button</li>
+                <li>Link</li>
+            </ul>
+            Each element has a name and an ID. An ID is unique to each element and is hidden. The name is visible as
+            a label. Some element types also have their specific data.<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>ubyte</td>
+                    <td>Type; 0x00 = Category, 0x01 = Checkbox, 0x02 = Slider, 0x03 = Dropdown Box, 0x04 = Button, 0x05 = Link</td>
+                </tr>
+                <tr>
+                    <td>0x01</td>
+                    <td>bool</td>
+                    <td>Is locked; 0x00 = No, 0x01 = Yes</td>
+                </tr>
+                <tr>
+                    <td>0x02</td>
+                    <td>uint</td>
+                    <td>Numeric ID</td>
+                </tr>
+                <tr>
+                    <td>0x06</td>
+                    <td>ushort</td>
+                    <td>Label length</td>
+                </tr>
+                <tr>
+                    <td>0x08</td>
+                    <td>char[*]</td>
+                    <td>UTF-8 string of any length defining the label</td>
+                </tr>
+                <tr>
+                    <td>+0x08</td>
+                    <td>byte[*]</td>
+                    <td>Element data</td>
+                </tr>
+            </table>
+            <h2 id="categories">Categories</h2>
+            Each Settings file requires its own root category. A category is basically a container for more elements.
+            Kind of like a folder in a filesystem. A category can be expanded or collapsed, and has its own label also.
+            Root category's label should be the same as the name of the Settings file, but is not required.<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>byte[*]</td>
+                    <td>Common element header</td>
+                </tr>
+                <tr>
+                    <td>+0x00</td>
+                    <td>uint</td>
+                    <td>Amount of contained elements</td>
+                </tr>
+                <tr>
+                    <td>+0x04</td>
+                    <td>byte[*]</td>
+                    <td>Element data</td>
+                </tr>
+            </table><br>
+            The element data is an ordered list of elements put after each other.
+            <h2 id="checkboxes">Checkboxes</h2>
+            Checkbox is a setting element type which has 2 states: Checked, unchecked. Checkboxes are typically used
+            for settings which can be turned on and off. Checkboxes have no exclusive parameters in its header. Element
+            data:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>bool</td>
+                    <td>Boolean value; 0x00 = Unchecked, 0x01 = Checked</td>
+                </tr>
+                <tr>
+                    <td>0x01</td>
+                    <td>bool</td>
+                    <td>Default value</td>
+                </tr>
+            </table>
+            <h2 id="sliders">Sliders</h2>
+            Slider is a setting element type which can have a value from a set range. The range is defined in the header
+            like this:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>byte[*]</td>
+                    <td>Common element header</td>
+                </tr>
+                <tr>
+                    <td>+0x00</td>
+                    <td>float</td>
+                    <td>Min</td>
+                </tr>
+                <tr>
+                    <td>+0x04</td>
+                    <td>float</td>
+                    <td>Max</td>
+                </tr>
+                <tr>
+                    <td>+0x08</td>
+                    <td>float</td>
+                    <td>Step</td>
+                </tr>
+            </table><br>Element data:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>float</td>
+                    <td>Current value</td>
+                </tr>
+                <tr>
+                    <td>0x04</td>
+                    <td>float</td>
+                    <td>Default value</td>
+                </tr>
+            </table>
+            <h2 id="dropdown-boxes">Dropdown Boxes</h2>
+            Dropdown box is a setting element type which when clicked, expands and the user can select a string value
+            from an ordered string list. The list is defined in the header. The value is an unsigned 32-bit integer
+            holding an index to the selected option.<br>Header data:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>byte[*]</td>
+                    <td>Common element header</td>
+                </tr>
+                <tr>
+                    <td>+0x00</td>
+                    <td>uint</td>
+                    <td>List length</td>
+                </tr>
+            </table><br>
+            The header then contains the following table repeated the amount of times specified in the previous value.<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>ushort</td>
+                    <td>String length</td>
+                </tr>
+                <tr>
+                    <td>+0x00</td>
+                    <td>char[*]</td>
+                    <td>UTF-8 string of any length defining the option label</td>
+                </tr>
+            </table><br>Element data:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>float</td>
+                    <td>Current value</td>
+                </tr>
+                <tr>
+                    <td>0x04</td>
+                    <td>float</td>
+                    <td>Default value</td>
+                </tr>
+            </table>
+            <h2 id="buttons">Buttons</h2>
+            Buttons don't hold any element data or exclusive header items. They can be used by a UI for the user to
+            click on them to perform an action. The action can be defined through the element ID by using a handler
+            function in the implementation.
+            <h2 id="links">Links</h2>
+            Links are like buttons, but instead they can be used to jump to a specific location in the file. The
+            location is defined through an ID which points to an element. When pressed in a UI, the selection should
+            jump to the element that has the same ID as in the header.<br>Header data:<br><br>
+            <table>
+                <tr>
+                    <th style="width: 10%">Offset</th>
+                    <th style="width: 10%">Type</th>
+                    <th style="width: 80%">Description</th>
+                </tr>
+                <tr>
+                    <td>0x00</td>
+                    <td>byte[*]</td>
+                    <td>Common element header</td>
+                </tr>
+                <tr>
+                    <td>+0x00</td>
+                    <td>uint</td>
+                    <td>Destination ID</td>
+                </tr>
+            </table>
+            <h2 id="implementations">Implementations</h2>
+            <td>The file format is currently unimplemented</td>
+        </div>
+        <div style="grid-column: 3 / 4; grid-row: 1 / 2">
+            <div class="table-of-content">
+                <text class="glow">Table of Content</text><br><br>
+                <a class="button" href="#introduction">Introduction</a><br>
+                <a class="button" href="#file-header">File Header</a><br>
+                <a class="button" href="#elements">Elements</a><br>
+                <a class="button" href="#categories">Categories</a><br>
+                <a class="button" href="#checkboxes">Checkboxes</a><br>
+                <a class="button" href="#sliders">Sliders</a><br>
+                <a class="button" href="#dropdown-boxes">Dropdown Boxes</a><br>
+                <a class="button" href="#buttons">Buttons</a><br>
+                <a class="button" href="#links">Links</a><br>
+                <a class="button" href="#implementations">Implementations</a><br>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
